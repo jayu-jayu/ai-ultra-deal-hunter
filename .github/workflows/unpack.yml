@@ -1,0 +1,26 @@
+# Mobile helper: upload incoming/bundle.zip through the GitHub web UI;
+# this workflow unpacks it into the repo and commits.
+name: Unpack bundle
+on:
+  push:
+    paths: ["incoming/bundle.zip"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack
+        run: |
+          test -f incoming/bundle.zip || { echo "no bundle"; exit 0; }
+          unzip -o incoming/bundle.zip -d .
+          rm incoming/bundle.zip
+      - name: Commit
+        run: |
+          git config user.name "unpack-bot"
+          git config user.email "unpack-bot@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "Unpack bundle"
+          git push
